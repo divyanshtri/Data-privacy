@@ -1,0 +1,50 @@
+import hashlib
+import requests
+
+def check_password_pwned(password):
+    sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
+
+    prefix = sha1_hash[:5]   
+    suffix = sha1_hash[5:]     
+
+    url = f"https://api.pwnedpasswords.com/range/{prefix}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise RuntimeError("Error fetching data from HaveIBeenPwned API")
+
+    hash_list = response.text.split("\n")
+
+    for line in hash_list:
+        h, count = line.split(":")
+        if h == suffix:
+            return int(count)  
+
+    return 0  
+
+filename = "Directory.txt" 
+
+print("Checking passwords against HaveIBeenPwned...")
+
+try:
+    with open(filename, "r") as file:
+        for line in file:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            try:
+                username, password = line.split(",")
+            except ValueError:
+                print(f"Invalid line format: {line}")
+                continue
+
+            count = check_password_pwned(password)
+
+            if count > 0:
+                print(f"[LEAKED] User '{username}' → Password found {count} times!")
+            else:
+                print(f"[SAFE]   User '{username}' → Password not found in breaches.")
+  except FileNotFoundError:
+    print(f"Error: File '{filename}' not found.")
