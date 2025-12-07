@@ -1,0 +1,12 @@
+import hashlib
+
+def sha256_hash(password):
+    encoded_password=password.encode()
+    hash_object=hashlib.sha256(encoded_password)
+    return hash_object.hexdigest()
+
+def main():
+    password=input("Enter a password: ")
+    hashed_password=sha256_hash(password)
+    print("SHA-256 hashed password: ", hashed_password)
+main()
